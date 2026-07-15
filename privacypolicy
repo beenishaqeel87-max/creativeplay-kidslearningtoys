@@ -1,0 +1,21 @@
+Privacy Policy for Creative Play Pinterest Poster
+Last Updated: July 14, 2026
+This Privacy Policy describes how Creative Play ("we", "us", or "our") and the "Creative Play Pinterest Poster" application (the "App") handle your personal information. The App is a local automation tool designed to help you publish Pins to Pinterest.
+1. Information We Collect
+The App runs entirely on your local machine.
+- API Credentials: The App requires your Pinterest Client ID, Client Secret, and Refresh Token. These credentials are saved locally on your computer in a .env file and are never sent to any server other than the official Pinterest API endpoints.
+- Content Data: The titles, descriptions, affiliate links, and images you queue for posting are stored locally on your machine in a CSV file (pins_queue.csv).
+2. How We Use Your Information
+We use your credentials and content data solely to:
+- Authenticate with the Pinterest API v5.
+- Automatically publish Pins (images, titles, descriptions, and affiliate links) to your designated Pinterest boards.
+3. Data Sharing and Disclosure
+Creative Play does not sell, trade, or share your data with any third parties.
+- The App only interacts with the official Pinterest API (api.pinterest.com) to post your Pins.
+- If you use affiliate networks (such as Amazon Associates, CJ Affiliate, or ClickBank), your Pins will contain redirect links to those platforms, which are subject to their own respective privacy policies.
+4. Security
+Your Pinterest API credentials and refresh tokens are sensitive. Because this application runs locally, the security of your credentials depends entirely on the security of your personal computer. Do not share your .env file or credentials with anyone.
+5. Changes to This Privacy Policy
+Creative Play may update this Privacy Policy from time to time. Any changes will be updated on this page with a revised "Last Updated" date.
+6. Contact Us
+If you have any questions about this Privacy Policy, you can manage your App permissions or revoke access to the App at any time directly through your Pinterest Account Settings under "Apps".
