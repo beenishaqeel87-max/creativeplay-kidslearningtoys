@@ -1,0 +1,51 @@
+name: Pinterest Automation Bot
+
+on:
+  schedule:
+    # Runs twice a day at 12:00 and 18:00 UTC
+    - cron: '0 12,18 * * *'
+  workflow_dispatch: # Allows manual triggering from the GitHub Actions tab
+
+jobs:
+  run-bot:
+    runs-on: ubuntu-latest
+    
+    # Prevent concurrent runs which could mess up the shared data JSON
+    concurrency:
+      group: pinterest-bot
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Pinterest Bot
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
+          PINTEREST_APP_ID: ${{ secrets.PINTEREST_APP_ID }}
+          PINTEREST_APP_SECRET: ${{ secrets.PINTEREST_APP_SECRET }}
+          PINTEREST_REFRESH_TOKEN: ${{ secrets.PINTEREST_REFRESH_TOKEN }}
+          BOARD_ID_STEM: ${{ secrets.BOARD_ID_STEM }}
+          BOARD_ID_MONTESSORI: ${{ secrets.BOARD_ID_MONTESSORI }}
+          BOARD_ID_CRAFTS: ${{ secrets.BOARD_ID_CRAFTS }}
+        run: python main.py
+
+      - name: Commit and push updated shared data
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add shared_data.json
+          # Only commit if there are changes
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update posted pins tracker" && git push)
