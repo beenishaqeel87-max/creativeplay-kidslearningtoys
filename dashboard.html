@@ -139,12 +139,12 @@
                 <h2>1. Pinterest OAuth & App Connection</h2>
                 <p>Click below to test the official Pinterest OAuth 2.0 authorization flow.</p>
 
-                <div style="margin-bottom: 24px; padding: 16px; background: rgba(230,0,35,0.05); border-radius: 16px; border: 1px dashed rgba(230,0,35,0.3); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                <div id="oauthStatusBox" style="margin-bottom: 24px; padding: 16px; background: rgba(230,0,35,0.05); border-radius: 16px; border: 1px dashed rgba(230,0,35,0.3); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
                     <div>
                         <strong style="color: var(--primary); font-size: 0.95rem;">Pinterest App ID: 1590972</strong>
                         <div style="font-size: 0.8rem; color: var(--text-muted);">Scopes: boards:read, boards:write, pins:read, pins:write</div>
                     </div>
-                    <a href="https://www.pinterest.com/oauth/?client_id=1590972&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=boards%3Aread%2Cpins%3Aread%2Cpins%3Awrite%2Cboards%3Awrite&state=creativeplay123" target="_blank" class="btn-primary" style="text-decoration: none; font-size: 0.9rem; padding: 10px 20px;">
+                    <a href="https://www.pinterest.com/oauth/?client_id=1590972&redirect_uri=https%3A%2F%2Fbeenishaqeel87-max.github.io%2Fcreativeplay-kidslearningtoys%2Fdashboard.html&response_type=code&scope=boards%3Aread%2Cpins%3Aread%2Cpins%3Awrite%2Cboards%3Awrite&state=creativeplay123" class="btn-primary" style="text-decoration: none; font-size: 0.9rem; padding: 10px 20px;">
                         🔑 Connect Pinterest Account (OAuth)
                     </a>
                 </div>
@@ -220,7 +220,26 @@
 </div>
 
 <script>
-    // Token read dynamically from UI input or prompt to adhere to GitHub Secret Scanning rules
+    // Detect OAuth Callback Code on Page Load
+    window.addEventListener('DOMContentLoaded', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const code = urlParams.get('code');
+        if (code) {
+            const oauthStatusBox = document.getElementById('oauthStatusBox');
+            if (oauthStatusBox) {
+                oauthStatusBox.style.background = "rgba(107, 203, 119, 0.15)";
+                oauthStatusBox.style.borderColor = "#6BCB77";
+                oauthStatusBox.innerHTML = `
+                    <div>
+                        <strong style="color: #2b7a78; font-size: 0.95rem;">✅ Pinterest OAuth Granted!</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Authorization Code: <code>${code.substring(0, 15)}...</code></div>
+                    </div>
+                    <span style="background: #6BCB77; color: white; padding: 6px 16px; border-radius: 99px; font-weight: bold; font-size: 0.85rem;">Status: Authorized</span>
+                `;
+            }
+        }
+    });
+
     const pinTitle = document.getElementById('pinTitle');
     const canvasTitle = document.getElementById('canvasTitle');
     const pinDesc = document.getElementById('pinDesc');
