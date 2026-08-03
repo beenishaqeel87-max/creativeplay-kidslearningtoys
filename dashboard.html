@@ -128,8 +128,8 @@
                 <h1>Real-Time Pinterest Pin Publisher</h1>
                 <p style="color: var(--text-muted);">Create & publish real Pins directly to your Pinterest Sandbox board via REST API v5.</p>
             </div>
-            <button class="btn-secondary" onclick="triggerOAuthModal()">
-                🔗 OAuth Status: Connected
+            <button class="btn-secondary" onclick="redirectToPinterestOAuth()">
+                🔗 Re-authenticate Pinterest Account
             </button>
         </div>
 
@@ -312,6 +312,11 @@
 
     function closeSuccessModal() {
         document.getElementById('successModal').style.display = "none";
+    }
+
+    function redirectToPinterestOAuth() {
+        const oauthUrl = "https://www.pinterest.com/oauth/?client_id=1590972&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=boards%3Aread%2Cpins%3Aread%2Cpins%3Awrite%2Cboards%3Awrite&state=creativeplay123";
+        window.open(oauthUrl, '_blank');
     }
 
     function triggerOAuthModal() {
