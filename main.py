@@ -232,9 +232,9 @@ def publish_to_pinterest(access_token, image_bytes, content):
         print(f"Failed to upload image: {upload_res.status_code}")
         return False
         
-    # 3. Create the Pin
-    print("Creating Pin...")
-    pin_url = "https://api.pinterest.com/v5/pins"
+    # 3. Create the Pin on Sandbox API
+    print("Creating Pin on Sandbox API...")
+    pin_url = "https://api-sandbox.pinterest.com/v5/pins"
     pin_payload = {
         "link": "https://beenishaqeel87-max.github.io/creativeplay-kidslearningtoys/",
         "title": content['title'],
