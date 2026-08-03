@@ -55,12 +55,9 @@ def generate_pin_content(data_manager):
     No markdown formatting, no backticks, no extra text.
     """
 
-    # Try models in order from newest free-tier to stable fallback
+    # gemini-3.1-flash-lite-preview is the only confirmed working free-tier model for this account
     models_to_try = [
-        "gemini-2.5-flash-lite",
-        "gemini-2.5-flash-lite-preview-06-17",
-        "gemini-2.0-flash-lite",
-        "gemini-1.5-flash",
+        "gemini-3.1-flash-lite-preview",
     ]
 
     last_error = None
