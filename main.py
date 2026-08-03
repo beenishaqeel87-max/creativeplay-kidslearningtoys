@@ -55,35 +55,50 @@ def generate_pin_content(data_manager):
     No markdown formatting, no backticks, no extra text.
     """
 
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.0-flash',
-            contents=prompt,
-        )
+    # Try models in order from newest free-tier to stable fallback
+    models_to_try = [
+        "gemini-2.5-flash-lite",
+        "gemini-2.5-flash-lite-preview-06-17",
+        "gemini-2.0-flash-lite",
+        "gemini-1.5-flash",
+    ]
 
-        text = response.text.strip()
-        # Clean any markdown code fences
-        if text.startswith("```json"):
-            text = text[7:]
-        elif text.startswith("```"):
-            text = text[3:]
-        if text.endswith("```"):
-            text = text[:-3]
+    last_error = None
+    for model_name in models_to_try:
+        try:
+            print(f"Trying Gemini model: {model_name}")
+            response = client.models.generate_content(
+                model=model_name,
+                contents=prompt,
+            )
 
-        content = json.loads(text.strip())
+            text = response.text.strip()
+            # Clean any markdown code fences
+            if text.startswith("```json"):
+                text = text[7:]
+            elif text.startswith("```"):
+                text = text[3:]
+            if text.endswith("```"):
+                text = text[:-3]
 
-        # Prevent duplicate titles
-        if data_manager.is_title_used(content['title']):
-            print("Duplicate title detected, regenerating...")
-            return generate_pin_content(data_manager)
+            content = json.loads(text.strip())
 
-        content['category'] = category
-        print(f"Generated: {content['title']} [{category}]")
-        return content
+            # Prevent duplicate titles
+            if data_manager.is_title_used(content['title']):
+                print("Duplicate title detected, regenerating...")
+                return generate_pin_content(data_manager)
 
-    except Exception as e:
-        print(f"Error generating content: {e}")
-        return None
+            content['category'] = category
+            print(f"Generated with {model_name}: {content['title']} [{category}]")
+            return content
+
+        except Exception as e:
+            print(f"Model {model_name} failed: {e}")
+            last_error = e
+            continue
+
+    print(f"All Gemini models failed. Last error: {last_error}")
+    return None
 
 
 def generate_image(prompt):
