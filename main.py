@@ -20,10 +20,12 @@ APP_SECRET = os.getenv("PINTEREST_APP_SECRET")
 REFRESH_TOKEN = os.getenv("PINTEREST_REFRESH_TOKEN")
 
 # Board mapping (Category to Board ID)
+DEFAULT_BOARD_ID = os.getenv("BOARD_ID_STEM", "845691704968020775")
+
 BOARD_MAPPING = {
-    "STEM Toys": os.getenv("BOARD_ID_STEM"),
-    "Montessori": os.getenv("BOARD_ID_MONTESSORI"),
-    "Crafts & Art": os.getenv("BOARD_ID_CRAFTS")
+    "STEM Toys": os.getenv("BOARD_ID_STEM") or DEFAULT_BOARD_ID,
+    "Montessori": os.getenv("BOARD_ID_MONTESSORI") or DEFAULT_BOARD_ID,
+    "Crafts & Art": os.getenv("BOARD_ID_CRAFTS") or DEFAULT_BOARD_ID
 }
 
 def get_new_pinterest_token():
