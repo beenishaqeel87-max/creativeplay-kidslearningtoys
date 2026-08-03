@@ -1,10 +1,10 @@
 name: Pinterest Automation Bot
 
+# on:
+#   schedule:
+#     - cron: '0 12,18 * * *'
 on:
-  schedule:
-    # Runs twice a day at 12:00 and 18:00 UTC
-    - cron: '0 12,18 * * *'
-  workflow_dispatch: # Allows manual triggering from the GitHub Actions tab
+  workflow_dispatch: # Manual trigger only
 
 jobs:
   run-bot:
