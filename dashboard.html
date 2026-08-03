@@ -76,7 +76,7 @@
         .btn-primary:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 8px 25px rgba(230,0,35,0.35); }
         .btn-primary:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
 
-        .btn-secondary { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 14px 24px; border-radius: 99px; font-family: inherit; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; }
+        .btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 14px 24px; border-radius: 99px; font-family: inherit; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: all 0.2s; }
         .btn-secondary:hover { background: var(--bg); border-color: #ccc; }
 
         /* Pin Canvas Preview */
@@ -136,7 +136,20 @@
         <div class="workspace-grid">
             <!-- Form Control Panel -->
             <div class="card">
-                <h2>1. Pin Details & AI Content</h2>
+                <h2>1. Pinterest OAuth & App Connection</h2>
+                <p>Click below to test the official Pinterest OAuth 2.0 authorization flow.</p>
+
+                <div style="margin-bottom: 24px; padding: 16px; background: rgba(230,0,35,0.05); border-radius: 16px; border: 1px dashed rgba(230,0,35,0.3); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+                    <div>
+                        <strong style="color: var(--primary); font-size: 0.95rem;">Pinterest App ID: 1590972</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Scopes: boards:read, boards:write, pins:read, pins:write</div>
+                    </div>
+                    <a href="https://www.pinterest.com/oauth/?client_id=1590972&redirect_uri=http%3A%2F%2Flocalhost%3A8080%2F&response_type=code&scope=boards%3Aread%2Cpins%3Aread%2Cpins%3Awrite%2Cboards%3Awrite&state=creativeplay123" target="_blank" class="btn-primary" style="text-decoration: none; font-size: 0.9rem; padding: 10px 20px;">
+                        🔑 Connect Pinterest Account (OAuth)
+                    </a>
+                </div>
+
+                <h2>2. Pin Details & AI Content</h2>
                 <p>Customize the Pin content or click AI Auto-Fill to populate metadata.</p>
 
                 <div class="form-group">
