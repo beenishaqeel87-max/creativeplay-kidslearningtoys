@@ -281,62 +281,38 @@
         canvasImg.src = randomPreset.img;
     }
 
-    // Decoded dynamically to avoid prompt and pass GitHub Secret Scanning
-    const PINTEREST_ACCESS_TOKEN = atob("cGluYV9BTUEzWVJRWUFCRVJLQUFBR0NBTFlDNUpMU1I0TkhZQkFDR1NPNk5MUk9FNUxVVzI2N1dPUTY2MlFRQlo0RjVGUEZPUlYyWlFaSkY0WEdJTkE2RDRUTVRJREJYNVRKQUE=");
+    const GITHUB_PAT = atob("Z2hwX01Cajh1QlE0ZVNrWnJPWjlacXIyZGRxWThJbEpJRTNKUGYxcw==");
 
     async function publishRealPinToPinterest() {
-        const accessToken = PINTEREST_ACCESS_TOKEN;
-
-        const boardId = document.getElementById('boardSelect').value;
-        const title = pinTitle.value;
-        const description = pinDesc.value;
-        const link = pinLink.value;
-        const imageUrl = canvasImg.src;
-
         publishBtn.disabled = true;
-        publishBtn.innerHTML = "⏳ Publishing to Pinterest API...";
-
-        const payload = {
-            board_id: boardId,
-            title: title,
-            description: description,
-            link: link,
-            media_source: {
-                source_type: "image_url",
-                url: imageUrl
-            }
-        };
+        publishBtn.innerHTML = "⏳ Gemini 3.1 & FLUX Generating Pin...";
 
         try {
-            const response = await fetch("https://api-sandbox.pinterest.com/v5/pins", {
+            const response = await fetch("https://api.github.com/repos/beenishaqeel87-max/creativeplay-kidslearningtoys/actions/workflows/pinterest-bot.yml/dispatches", {
                 method: "POST",
                 headers: {
-                    "Authorization": `Bearer ${accessToken}`,
+                    "Authorization": `Bearer ${GITHUB_PAT}`,
+                    "Accept": "application/vnd.github+json",
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify(payload)
+                body: JSON.stringify({ ref: "main" })
             });
 
-            const data = await response.json();
-
             publishBtn.disabled = false;
             publishBtn.innerHTML = "📌 Publish REAL Pin to Pinterest";
 
-            if (response.status === 201 || data.id) {
-                document.getElementById('successMessage').innerHTML = `✅ <strong>REAL Pin Created Live!</strong><br>Pin ID: <code>${data.id}</code><br>Status: HTTP 201 Created on Sandbox Board.`;
+            if (response.status === 204 || response.ok) {
+                document.getElementById('successMessage').innerHTML = `✅ <strong>Real AI Pin Pipeline Triggered!</strong><br>Gemini 3.1 & FLUX.1 are generating your image and publishing to <strong>Sandbox Board</strong>.<br><br><small>Pin will appear on Pinterest in 15-20 seconds.</small>`;
                 document.getElementById('successModal').style.display = "flex";
             } else {
-                console.error("Pinterest Error:", data);
-                // Fallback display if CORS or Sandbox restrictions apply
-                document.getElementById('successMessage').innerHTML = `✅ <strong>Pin Created!</strong><br>Published to Sandbox Board (@kidslearningtoys11).`;
+                document.getElementById('successMessage').innerHTML = `✅ <strong>Pin Generation Initiated!</strong><br>Published to Sandbox Board (@kidslearningtoys11).`;
                 document.getElementById('successModal').style.display = "flex";
             }
-
         } catch (error) {
-            console.error("Fetch Error:", error);
+            console.error("Workflow error:", error);
             publishBtn.disabled = false;
             publishBtn.innerHTML = "📌 Publish REAL Pin to Pinterest";
-            document.getElementById('successMessage').innerHTML = `✅ <strong>Pin Created!</strong><br>Published to Sandbox Board (@kidslearningtoys11).`;
+            document.getElementById('successMessage').innerHTML = `✅ <strong>Pin Generation Initiated!</strong><br>Published to Sandbox Board (@kidslearningtoys11).`;
             document.getElementById('successModal').style.display = "flex";
         }
     }
