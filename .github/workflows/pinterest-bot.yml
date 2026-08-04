@@ -9,7 +9,9 @@ on:
 jobs:
   run-bot:
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write   # needed to push shared_data.json updates
+
     # Prevent concurrent runs which could mess up the shared data JSON
     concurrency:
       group: pinterest-bot
