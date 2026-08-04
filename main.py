@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from PIL import Image, ImageDraw, ImageFont
 from shared_data_manager import SharedDataManager
 from google import genai
+from google.genai import types
 
 # Load environment variables
 load_dotenv()
@@ -99,61 +100,57 @@ def generate_pin_content(data_manager):
 
 
 def generate_image(prompt):
-    """Phase 2: Generate image using Hugging Face FLUX.1-schnell with retries."""
+    """Phase 2: Generate image using Gemini native image generation."""
     import time
-    API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
-    headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
-    full_prompt = f"Vertical portrait photo, bright lighting, colorful kids educational toy, {prompt}"
-    payload = {
-        "inputs": full_prompt,
-        "parameters": {"width": 768, "height": 1344}
-    }
 
-    max_attempts = 4
-    wait_seconds = [5, 15, 30]  # backoff delays between attempts
+    full_prompt = (
+        f"Create a high quality vertical portrait photo (9:16 aspect ratio) of "
+        f"colorful kids educational toy, bright studio lighting, vibrant colors, "
+        f"professional product photography style. {prompt}"
+    )
 
-    for attempt in range(1, max_attempts + 1):
-        try:
-            print(f"Generating image with HuggingFace FLUX.1 (attempt {attempt}/{max_attempts})...")
-            response = requests.post(API_URL, headers=headers, json=payload, timeout=90)
+    # Try Gemini image models in order
+    image_models = [
+        "gemini-3.1-flash-lite-image",
+        "gemini-3.1-flash-image",
+        "gemini-2.5-flash-image",
+    ]
 
-            if response.status_code == 200:
-                # Confirm it's actually image bytes, not a JSON error
-                content_type = response.headers.get("Content-Type", "")
-                if "image" in content_type or response.content[:4] in (b'\xff\xd8\xff\xe0', b'\x89PNG', b'RIFF', b'GIF8'):
-                    print(f"Image generated successfully on attempt {attempt}!")
-                    return Image.open(io.BytesIO(response.content))
+    client = genai.Client(api_key=GEMINI_API_KEY)
+
+    for model_name in image_models:
+        for attempt in range(1, 3):
+            try:
+                print(f"Generating image with {model_name} (attempt {attempt})...")
+                response = client.models.generate_content(
+                    model=model_name,
+                    contents=full_prompt,
+                    config=types.GenerateContentConfig(
+                        response_modalities=["IMAGE", "TEXT"]
+                    )
+                )
+
+                for part in response.candidates[0].content.parts:
+                    if part.inline_data and part.inline_data.data:
+                        image_data = base64.b64decode(part.inline_data.data)
+                        print(f"Image generated successfully with {model_name}!")
+                        return Image.open(io.BytesIO(image_data))
+
+                print(f"No image in response from {model_name}")
+
+            except Exception as e:
+                err = str(e)
+                if "429" in err or "quota" in err.lower() or "rate" in err.lower():
+                    print(f"Rate limited on {model_name}, waiting 20s...")
+                    time.sleep(20)
+                elif "404" in err or "not found" in err.lower():
+                    print(f"Model {model_name} not available, trying next...")
+                    break
                 else:
-                    print(f"Got 200 but unexpected content: {response.text[:200]}")
+                    print(f"Error with {model_name} attempt {attempt}: {err[:150]}")
+                    time.sleep(5)
 
-            elif response.status_code == 503:
-                # Model is loading — wait longer
-                try:
-                    wait_hint = response.json().get("estimated_time", 20)
-                except Exception:
-                    wait_hint = 20
-                wait = min(int(wait_hint) + 5, 40)
-                print(f"Model loading (503). Waiting {wait}s before retry...")
-                time.sleep(wait)
-                continue
-
-            elif response.status_code == 429:
-                print(f"Rate limited (429). Waiting 30s...")
-                time.sleep(30)
-                continue
-
-            else:
-                print(f"HuggingFace error (status {response.status_code}): {response.text[:300]}")
-
-        except Exception as e:
-            print(f"Network error on attempt {attempt}: {e}")
-
-        if attempt < max_attempts:
-            delay = wait_seconds[attempt - 1]
-            print(f"Retrying in {delay}s...")
-            time.sleep(delay)
-
-    print("All HuggingFace attempts failed.")
+    print("All Gemini image models failed.")
     return None
 
 
