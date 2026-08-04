@@ -300,13 +300,13 @@
             console.error("Workflow trigger error:", error);
         }
 
-        // Step-by-step pipeline animation matching real GitHub Actions workflow
+        // Step-by-step pipeline animation matching real GitHub Actions workflow (~30s)
         const steps = [
-            { msg: "🚀 AI Pipeline Starting...", duration: 8 },
-            { msg: "🤖 Gemini 3.1 Generating Pin Topic & Title...", duration: 12 },
-            { msg: "🎨 FLUX.1 Generating High-Res Image...", duration: 50 },
-            { msg: "🖼️ Pillow Applying Text Overlay & Gradient...", duration: 10 },
-            { msg: "📌 Publishing to Pinterest Sandbox API...", duration: 10 },
+            { msg: "🚀 AI Pipeline Starting...", duration: 4 },
+            { msg: "🤖 Gemini 3.1 Generating Pin Topic & Title...", duration: 8 },
+            { msg: "🎨 Cloudflare FLUX.1 Generating AI Image...", duration: 12 },
+            { msg: "🖼️ Pillow Applying Text Overlay & Gradient...", duration: 4 },
+            { msg: "📌 Publishing to Pinterest Sandbox API...", duration: 4 },
         ];
 
         let stepIndex = 0;
