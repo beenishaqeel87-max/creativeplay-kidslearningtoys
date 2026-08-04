@@ -99,25 +99,62 @@ def generate_pin_content(data_manager):
 
 
 def generate_image(prompt):
-    """Phase 2: Generate image using Hugging Face FLUX.1-schnell."""
-    print("Generating image with Hugging Face FLUX.1...")
+    """Phase 2: Generate image using Hugging Face FLUX.1-schnell with retries."""
+    import time
     API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
     headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
-
     full_prompt = f"Vertical portrait photo, bright lighting, colorful kids educational toy, {prompt}"
-
     payload = {
         "inputs": full_prompt,
         "parameters": {"width": 768, "height": 1344}
     }
 
-    response = requests.post(API_URL, headers=headers, json=payload, timeout=60)
-    if response.status_code == 200:
-        print("Image generated successfully!")
-        return Image.open(io.BytesIO(response.content))
-    else:
-        print(f"Error generating image (status {response.status_code}): {response.text[:300]}")
-        return None
+    max_attempts = 4
+    wait_seconds = [5, 15, 30]  # backoff delays between attempts
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            print(f"Generating image with HuggingFace FLUX.1 (attempt {attempt}/{max_attempts})...")
+            response = requests.post(API_URL, headers=headers, json=payload, timeout=90)
+
+            if response.status_code == 200:
+                # Confirm it's actually image bytes, not a JSON error
+                content_type = response.headers.get("Content-Type", "")
+                if "image" in content_type or response.content[:4] in (b'\xff\xd8\xff\xe0', b'\x89PNG', b'RIFF', b'GIF8'):
+                    print(f"Image generated successfully on attempt {attempt}!")
+                    return Image.open(io.BytesIO(response.content))
+                else:
+                    print(f"Got 200 but unexpected content: {response.text[:200]}")
+
+            elif response.status_code == 503:
+                # Model is loading — wait longer
+                try:
+                    wait_hint = response.json().get("estimated_time", 20)
+                except Exception:
+                    wait_hint = 20
+                wait = min(int(wait_hint) + 5, 40)
+                print(f"Model loading (503). Waiting {wait}s before retry...")
+                time.sleep(wait)
+                continue
+
+            elif response.status_code == 429:
+                print(f"Rate limited (429). Waiting 30s...")
+                time.sleep(30)
+                continue
+
+            else:
+                print(f"HuggingFace error (status {response.status_code}): {response.text[:300]}")
+
+        except Exception as e:
+            print(f"Network error on attempt {attempt}: {e}")
+
+        if attempt < max_attempts:
+            delay = wait_seconds[attempt - 1]
+            print(f"Retrying in {delay}s...")
+            time.sleep(delay)
+
+    print("All HuggingFace attempts failed.")
+    return None
 
 
 def add_text_to_image(image, title):
