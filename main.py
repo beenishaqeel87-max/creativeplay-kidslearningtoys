@@ -104,14 +104,22 @@ def generate_image(prompt):
 
     # ── Option 1: HuggingFace FLUX.1-schnell ──────────────────────────────────
     if HUGGINGFACE_API_KEY:
-        HF_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
         hf_headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
-        hf_payload = {"inputs": full_prompt, "parameters": {"width": 768, "height": 1344}}
+        # Try new router endpoint first (different hostname, may bypass DNS block)
+        hf_endpoints = [
+            "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
+            "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+        ]
 
-        for attempt in range(1, 3):
+        for endpoint in hf_endpoints:
             try:
-                print(f"HuggingFace FLUX.1-schnell attempt {attempt}/2...")
-                resp = requests.post(HF_URL, headers=hf_headers, json=hf_payload, timeout=90)
+                print(f"HuggingFace attempt via: {endpoint[:50]}...")
+                resp = requests.post(
+                    endpoint,
+                    headers=hf_headers,
+                    json={"inputs": full_prompt, "parameters": {"width": 768, "height": 1344}},
+                    timeout=90
+                )
                 if resp.status_code == 200 and "image" in resp.headers.get("Content-Type", ""):
                     print("HuggingFace image generated successfully!")
                     return Image.open(io.BytesIO(resp.content))
@@ -119,19 +127,21 @@ def generate_image(prompt):
                     wait = min(int(resp.json().get("estimated_time", 20)) + 5, 45)
                     print(f"HF model loading, waiting {wait}s...")
                     time.sleep(wait)
-                    continue
+                    # retry same endpoint
+                    resp2 = requests.post(endpoint, headers=hf_headers, json={"inputs": full_prompt, "parameters": {"width": 768, "height": 1344}}, timeout=90)
+                    if resp2.status_code == 200 and "image" in resp2.headers.get("Content-Type", ""):
+                        print("HuggingFace image generated successfully (retry)!")
+                        return Image.open(io.BytesIO(resp2.content))
                 elif resp.status_code == 429:
                     print("HF rate limited, waiting 30s...")
                     time.sleep(30)
-                    continue
                 else:
                     print(f"HF error {resp.status_code}: {resp.text[:100]}")
             except Exception as e:
-                print(f"HF error attempt {attempt}: {str(e)[:120]}")
-            if attempt < 2:
-                time.sleep(5)
+                print(f"HF error ({endpoint[:40]}): {str(e)[:120]}")
     else:
         print("No HuggingFace API key — skipping.")
+
 
     # ── Option 2: Cloudflare Workers AI FLUX.1-schnell ────────────────────────
     if CF_ACCOUNT_ID and CF_API_TOKEN:
