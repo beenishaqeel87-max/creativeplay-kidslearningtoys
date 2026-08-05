@@ -102,45 +102,44 @@ def generate_image(prompt):
         f"vibrant colors, professional product photography style. {prompt}"
     )
 
-    # ── Option 1: HuggingFace FLUX.1-schnell ──────────────────────────────────
+    # ── Option 1: HuggingFace via router.huggingface.co (reachable on GA!) ─────
+    # router.huggingface.co resolves fine — only api-inference.huggingface.co is blocked
     if HUGGINGFACE_API_KEY:
         hf_headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
-        # Try new router endpoint first (different hostname, may bypass DNS block)
-        hf_endpoints = [
-            "https://router.huggingface.co/hf-inference/models/black-forest-labs/FLUX.1-schnell",
-            "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell",
+        # Models available on hf-inference provider via router
+        hf_models = [
+            "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0",
+            "https://router.huggingface.co/hf-inference/models/runwayml/stable-diffusion-v1-5",
         ]
-
-        for endpoint in hf_endpoints:
+        for model_url in hf_models:
             try:
-                print(f"HuggingFace attempt via: {endpoint[:50]}...")
+                model_name = model_url.split("/models/")[-1]
+                print(f"HuggingFace trying: {model_name}...")
                 resp = requests.post(
-                    endpoint,
+                    model_url,
                     headers=hf_headers,
-                    json={"inputs": full_prompt, "parameters": {"width": 768, "height": 1344}},
+                    json={"inputs": full_prompt},
                     timeout=90
                 )
                 if resp.status_code == 200 and "image" in resp.headers.get("Content-Type", ""):
-                    print("HuggingFace image generated successfully!")
+                    print(f"HuggingFace ({model_name}) image generated successfully!")
                     return Image.open(io.BytesIO(resp.content))
                 elif resp.status_code == 503:
                     wait = min(int(resp.json().get("estimated_time", 20)) + 5, 45)
                     print(f"HF model loading, waiting {wait}s...")
                     time.sleep(wait)
-                    # retry same endpoint
-                    resp2 = requests.post(endpoint, headers=hf_headers, json={"inputs": full_prompt, "parameters": {"width": 768, "height": 1344}}, timeout=90)
+                    resp2 = requests.post(model_url, headers=hf_headers, json={"inputs": full_prompt}, timeout=90)
                     if resp2.status_code == 200 and "image" in resp2.headers.get("Content-Type", ""):
-                        print("HuggingFace image generated successfully (retry)!")
+                        print(f"HuggingFace ({model_name}) generated successfully (retry)!")
                         return Image.open(io.BytesIO(resp2.content))
-                elif resp.status_code == 429:
-                    print("HF rate limited, waiting 30s...")
-                    time.sleep(30)
                 else:
-                    print(f"HF error {resp.status_code}: {resp.text[:100]}")
+                    print(f"HF {model_name} error {resp.status_code}: {resp.text[:120]}")
             except Exception as e:
-                print(f"HF error ({endpoint[:40]}): {str(e)[:120]}")
+                print(f"HF {model_name} error: {str(e)[:120]}")
     else:
         print("No HuggingFace API key — skipping.")
+
+
 
 
     # ── Option 2: Cloudflare Workers AI FLUX.1-schnell ────────────────────────
