@@ -13,6 +13,7 @@ from google import genai
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
 CF_ACCOUNT_ID = os.getenv("CF_ACCOUNT_ID")
 CF_API_TOKEN = os.getenv("CF_API_TOKEN")
 APP_ID = os.getenv("PINTEREST_APP_ID")
@@ -93,54 +94,78 @@ def generate_pin_content(data_manager):
 
 
 def generate_image(prompt):
-    """Phase 2: Generate image. Uses Cloudflare FLUX.1-schnell, falls back to Picsum."""
+    """Phase 2: Generate image. HuggingFace → Cloudflare → Picsum fallback."""
     import time
 
-    # ── Primary: Cloudflare Workers AI FLUX.1-schnell ─────────────────────────
-    # Returns JSON: {"result": {"image": "<base64>"}, "success": true}
-    cf_url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/ai/run/@cf/black-forest-labs/flux-1-schnell"
-    cf_headers = {"Authorization": f"Bearer {CF_API_TOKEN}", "Content-Type": "application/json"}
-    cf_payload = {
-        "prompt": (
-            f"Vertical portrait photo, bright studio lighting, colorful kids educational toy, "
-            f"vibrant colors, professional product photography style. {prompt}"
-        ),
-        "num_steps": 4
-    }
+    full_prompt = (
+        f"Vertical portrait photo, bright studio lighting, colorful kids educational toy, "
+        f"vibrant colors, professional product photography style. {prompt}"
+    )
 
-    for attempt in range(1, 3):
-        try:
-            print(f"Cloudflare FLUX.1-schnell attempt {attempt}/2...")
-            resp = requests.post(cf_url, headers=cf_headers, json=cf_payload, timeout=45)
+    # ── Option 1: HuggingFace FLUX.1-schnell ──────────────────────────────────
+    if HUGGINGFACE_API_KEY:
+        HF_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
+        hf_headers = {"Authorization": f"Bearer {HUGGINGFACE_API_KEY}"}
+        hf_payload = {"inputs": full_prompt, "parameters": {"width": 768, "height": 1344}}
 
-            if resp.status_code == 200:
-                data = resp.json()
-                if data.get("success") and data.get("result", {}).get("image"):
-                    image_bytes = base64.b64decode(data["result"]["image"])
-                    print("Cloudflare image generated successfully!")
-                    return Image.open(io.BytesIO(image_bytes))
+        for attempt in range(1, 3):
+            try:
+                print(f"HuggingFace FLUX.1-schnell attempt {attempt}/2...")
+                resp = requests.post(HF_URL, headers=hf_headers, json=hf_payload, timeout=90)
+                if resp.status_code == 200 and "image" in resp.headers.get("Content-Type", ""):
+                    print("HuggingFace image generated successfully!")
+                    return Image.open(io.BytesIO(resp.content))
+                elif resp.status_code == 503:
+                    wait = min(int(resp.json().get("estimated_time", 20)) + 5, 45)
+                    print(f"HF model loading, waiting {wait}s...")
+                    time.sleep(wait)
+                    continue
+                elif resp.status_code == 429:
+                    print("HF rate limited, waiting 30s...")
+                    time.sleep(30)
+                    continue
                 else:
-                    print(f"Cloudflare unexpected response: {str(data)[:200]}")
-            else:
-                print(f"Cloudflare error {resp.status_code}: {resp.text[:200]}")
+                    print(f"HF error {resp.status_code}: {resp.text[:100]}")
+            except Exception as e:
+                print(f"HF error attempt {attempt}: {str(e)[:120]}")
+            if attempt < 2:
+                time.sleep(5)
+    else:
+        print("No HuggingFace API key — skipping.")
 
-        except Exception as e:
-            print(f"Cloudflare error attempt {attempt}: {str(e)[:150]}")
+    # ── Option 2: Cloudflare Workers AI FLUX.1-schnell ────────────────────────
+    if CF_ACCOUNT_ID and CF_API_TOKEN:
+        cf_url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/ai/run/@cf/black-forest-labs/flux-1-schnell"
+        cf_headers = {"Authorization": f"Bearer {CF_API_TOKEN}", "Content-Type": "application/json"}
+        cf_payload = {"prompt": full_prompt, "num_steps": 4}
 
-        if attempt < 2:
-            time.sleep(5)
+        for attempt in range(1, 3):
+            try:
+                print(f"Cloudflare FLUX.1-schnell attempt {attempt}/2...")
+                resp = requests.post(cf_url, headers=cf_headers, json=cf_payload, timeout=45)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    if data.get("success") and data.get("result", {}).get("image"):
+                        image_bytes = base64.b64decode(data["result"]["image"])
+                        print("Cloudflare image generated successfully!")
+                        return Image.open(io.BytesIO(image_bytes))
+                else:
+                    print(f"Cloudflare error {resp.status_code}: {resp.text[:100]}")
+            except Exception as e:
+                print(f"Cloudflare error attempt {attempt}: {str(e)[:120]}")
+            if attempt < 2:
+                time.sleep(5)
+    else:
+        print("No Cloudflare credentials — skipping.")
 
-    # ── Fallback: Picsum Photos (always reachable from GitHub Actions) ─────────
-    print("Cloudflare unavailable — using Picsum Photos fallback...")
+    # ── Option 3: Picsum Photos (always works) ────────────────────────────────
+    print("Using Picsum Photos fallback...")
     seed = abs(hash(prompt[:40])) % 1000
-    picsum_url = f"https://picsum.photos/seed/{seed}/768/1344"
     try:
-        resp = requests.get(picsum_url, timeout=20, allow_redirects=True)
+        resp = requests.get(f"https://picsum.photos/seed/{seed}/768/1344", timeout=20, allow_redirects=True)
         if resp.status_code == 200:
             print(f"Picsum fallback image fetched (seed={seed})!")
             return Image.open(io.BytesIO(resp.content))
-        else:
-            print(f"Picsum error: {resp.status_code}")
     except Exception as e:
         print(f"Picsum error: {e}")
 
