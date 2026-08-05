@@ -287,25 +287,19 @@
         publishBtn.disabled = true;
         publishBtn.innerHTML = "⏳ Triggering AI Pipeline...";
 
-        let dispatchOk = false;
         try {
-            const resp = await fetch("https://api.github.com/repos/beenishaqeel87-max/creativeplay-kidslearningtoys/actions/workflows/pinterest-bot.yml/dispatches", {
+            // Call Cloudflare Worker proxy (PAT stored securely server-side)
+            const resp = await fetch("https://pinterest-trigger.beenish-aqeel87.workers.dev/", {
                 method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${GITHUB_PAT}`,
-                    "Accept": "application/vnd.github+json",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({ ref: "main" })
+                headers: { "Content-Type": "application/json" }
             });
 
-            if (resp.status === 204) {
-                dispatchOk = true;
+            if (resp.ok) {
                 console.log("✅ Workflow dispatched successfully!");
             } else {
                 const errText = await resp.text();
                 console.error("Dispatch failed:", resp.status, errText);
-                alert(`❌ Failed to trigger workflow (${resp.status}). Check console for details.`);
+                alert(`❌ Failed to trigger workflow (${resp.status}): ${errText}`);
                 publishBtn.disabled = false;
                 publishBtn.innerHTML = "📌 Publish REAL Pin to Pinterest";
                 return;
