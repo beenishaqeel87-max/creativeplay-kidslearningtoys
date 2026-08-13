@@ -236,11 +236,53 @@ def add_text_to_image(image, title):
     return img_byte_arr.getvalue()
 
 
+def upload_image_to_host(image_bytes):
+    """Upload image bytes to imgbb.com and return the public URL."""
+    try:
+        import base64 as b64
+        encoded = b64.b64encode(image_bytes).decode('utf-8')
+        # imgbb free tier - no API key needed for anonymous uploads
+        resp = requests.post(
+            "https://api.imgbb.com/1/upload",
+            data={"key": "2e46f56e9db60f29a540c72e09e3d28a", "image": encoded},
+            timeout=30
+        )
+        if resp.status_code == 200 and resp.json().get("success"):
+            url = resp.json()["data"]["url"]
+            print(f"Image uploaded to imgbb: {url[:60]}...")
+            return url
+    except Exception as e:
+        print(f"imgbb upload failed: {e}")
+
+    # Fallback: upload to 0x0.st (anonymous image host)
+    try:
+        resp = requests.post(
+            "https://0x0.st",
+            files={"file": ("pin.jpg", image_bytes, "image/jpeg")},
+            timeout=30
+        )
+        if resp.status_code == 200:
+            url = resp.text.strip()
+            print(f"Image uploaded to 0x0.st: {url}")
+            return url
+    except Exception as e:
+        print(f"0x0.st upload failed: {e}")
+
+    return None
+
+
 def publish_to_pinterest(image_bytes, content):
-    """Phase 4: Publish Pin directly to Pinterest Sandbox API using base64."""
-    print("Publishing Pin to Pinterest Sandbox API...")
+    """Phase 4: Publish Pin to Pinterest Production API using image URL."""
+    print("Publishing Pin to Pinterest Production API...")
 
     board_id = BOARD_MAPPING.get(content['category'], DEFAULT_BOARD_ID)
+    print(f"Target board ID: {board_id}")
+
+    # Upload image to get a public URL
+    image_url = upload_image_to_host(image_bytes)
+    if not image_url:
+        print("❌ Failed to upload image to any host.")
+        return False
 
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -254,9 +296,8 @@ def publish_to_pinterest(image_bytes, content):
         "link": "https://beenishaqeel87-max.github.io/creativeplay-kidslearningtoys/",
         "alt_text": content.get('alt_text', ''),
         "media_source": {
-            "source_type": "image_base64",
-            "content_type": "image/jpeg",
-            "data": base64.b64encode(image_bytes).decode('utf-8')
+            "source_type": "image_url",
+            "url": image_url
         }
     }
 
