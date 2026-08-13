@@ -237,37 +237,59 @@ def add_text_to_image(image, title):
 
 
 def upload_image_to_host(image_bytes):
-    """Upload image bytes to imgbb.com and return the public URL."""
+    """Upload image bytes to a free host and return the public URL."""
+
+    # ── Option 1: catbox.moe (reliable, no auth required) ─────────────────────
     try:
-        import base64 as b64
-        encoded = b64.b64encode(image_bytes).decode('utf-8')
-        # imgbb free tier - no API key needed for anonymous uploads
+        print("Uploading to catbox.moe...")
         resp = requests.post(
-            "https://api.imgbb.com/1/upload",
-            data={"key": "2e46f56e9db60f29a540c72e09e3d28a", "image": encoded},
+            "https://catbox.moe/user/api.php",
+            data={"reqtype": "fileupload"},
+            files={"fileToUpload": ("pin.jpg", image_bytes, "image/jpeg")},
             timeout=30
         )
-        if resp.status_code == 200 and resp.json().get("success"):
-            url = resp.json()["data"]["url"]
-            print(f"Image uploaded to imgbb: {url[:60]}...")
-            return url
+        if resp.status_code == 200 and resp.text.startswith("https://"):
+            print(f"Uploaded to catbox.moe: {resp.text.strip()}")
+            return resp.text.strip()
+        else:
+            print(f"catbox.moe failed: {resp.status_code} {resp.text[:100]}")
     except Exception as e:
-        print(f"imgbb upload failed: {e}")
+        print(f"catbox.moe error: {e}")
 
-    # Fallback: upload to 0x0.st (anonymous image host)
+    # ── Option 2: 0x0.st (anonymous file host) ────────────────────────────────
     try:
+        print("Uploading to 0x0.st...")
         resp = requests.post(
             "https://0x0.st",
             files={"file": ("pin.jpg", image_bytes, "image/jpeg")},
             timeout=30
         )
-        if resp.status_code == 200:
-            url = resp.text.strip()
-            print(f"Image uploaded to 0x0.st: {url}")
-            return url
+        if resp.status_code == 200 and resp.text.strip().startswith("https://"):
+            print(f"Uploaded to 0x0.st: {resp.text.strip()}")
+            return resp.text.strip()
+        else:
+            print(f"0x0.st failed: {resp.status_code} {resp.text[:100]}")
     except Exception as e:
-        print(f"0x0.st upload failed: {e}")
+        print(f"0x0.st error: {e}")
 
+    # ── Option 3: litterbox.catbox.moe (1h temp storage) ──────────────────────
+    try:
+        print("Uploading to litterbox.catbox.moe...")
+        resp = requests.post(
+            "https://litterbox.catbox.moe/resources/internals/api.php",
+            data={"reqtype": "fileupload", "time": "1h"},
+            files={"fileToUpload": ("pin.jpg", image_bytes, "image/jpeg")},
+            timeout=30
+        )
+        if resp.status_code == 200 and resp.text.startswith("https://"):
+            print(f"Uploaded to litterbox: {resp.text.strip()}")
+            return resp.text.strip()
+        else:
+            print(f"litterbox failed: {resp.status_code} {resp.text[:100]}")
+    except Exception as e:
+        print(f"litterbox error: {e}")
+
+    print("❌ All image hosts failed.")
     return None
 
 
