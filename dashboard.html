@@ -152,29 +152,17 @@
                     </a>
                 </div>
 
-                <h2>2. Pin Details & AI Content</h2>
-                <p>Customize the Pin content or click AI Auto-Fill to populate metadata.</p>
+                <h2>2. Amazon Affiliate Details (Optional)</h2>
+                <p>Provide a product title and affiliate link. Gemini will create a pin tailored to this product.</p>
 
                 <div class="form-group">
-                    <label>Target Pinterest Board</label>
-                    <select class="form-select" id="boardSelect">
-                        <option value="845691704968020775">Sandbox Board (ID: 845691704968020775)</option>
-                    </select>
+                    <label>Amazon Product Title</label>
+                    <input type="text" class="form-input" id="affiliateTitle" placeholder="e.g. LEGO Classic Medium Creative Brick Box">
                 </div>
 
                 <div class="form-group">
-                    <label>Pin Title</label>
-                    <input type="text" class="form-input" id="pinTitle" value="Wooden STEM Building Blocks for Toddlers">
-                </div>
-
-                <div class="form-group">
-                    <label>Description & Hashtags</label>
-                    <textarea class="form-textarea" id="pinDesc">Spark your child's creativity with these eco-friendly wooden STEM blocks! Nurtures spatial awareness and fine motor skills. #STEMToys #EducationalToys #MontessoriKids</textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Destination Link (URL)</label>
-                    <input type="text" class="form-input" id="pinLink" value="https://beenishaqeel87-max.github.io/creativeplay-kidslearningtoys/">
+                    <label>Amazon Affiliate Link</label>
+                    <input type="url" class="form-input" id="affiliateLink" placeholder="e.g. https://amzn.to/3example">
                 </div>
 
                 <div class="btn-group">
@@ -243,15 +231,14 @@
         }
     });
 
-    const pinTitle = document.getElementById('pinTitle');
+    const affiliateTitle = document.getElementById('affiliateTitle');
+    const affiliateLink = document.getElementById('affiliateLink');
     const canvasTitle = document.getElementById('canvasTitle');
-    const pinDesc = document.getElementById('pinDesc');
-    const pinLink = document.getElementById('pinLink');
     const canvasImg = document.getElementById('canvasImg');
     const publishBtn = document.getElementById('publishBtn');
 
     // Live update preview title as user types
-    pinTitle.addEventListener('input', (e) => {
+    affiliateTitle.addEventListener('input', (e) => {
         canvasTitle.innerText = e.target.value || "Your Pin Title Here";
     });
 
@@ -259,25 +246,21 @@
         const presets = [
             {
                 title: "Top 5 STEM Science Kits for Curious Kids",
-                desc: "Unleash your child's inner scientist! These hands-on chemistry and robotics kits make learning fun and engaging. Perfect for weekend science fun! #STEMKids #ScienceToys #KidsActivities",
                 img: "https://images.unsplash.com/photo-1587654780291-39c9404d746b?w=600&auto=format&fit=crop&q=80"
             },
             {
                 title: "Wooden Montessori Sensory Toys for Toddlers",
-                desc: "Encourage independent play and fine motor development with these self-correcting wooden puzzles and sorting toys. #MontessoriAtHome #ToddlerToys #SensoryPlay",
                 img: "https://images.unsplash.com/photo-1596461404969-9ae70f2830c1?w=600&auto=format&fit=crop&q=80"
             },
             {
                 title: "Creative Finger Paint Sets for Preschoolers",
-                desc: "Safe, non-toxic art kits for toddlers to explore colors and textures! Includes washable paints and durable brushes. #KidsCrafts #ArtForKids #PreschoolActivities",
                 img: "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=600&auto=format&fit=crop&q=80"
             }
         ];
 
         const randomPreset = presets[Math.floor(Math.random() * presets.length)];
-        pinTitle.value = randomPreset.title;
+        affiliateTitle.value = randomPreset.title;
         canvasTitle.innerText = randomPreset.title;
-        pinDesc.value = randomPreset.desc;
         canvasImg.src = randomPreset.img;
     }
 
@@ -289,9 +272,15 @@
 
         try {
             // Call Cloudflare Worker proxy (PAT stored securely server-side)
+            const payload = {
+                product_title: affiliateTitle.value.trim(),
+                affiliate_link: affiliateLink.value.trim()
+            };
+
             const resp = await fetch("https://pinterest-trigger.beenish-aqeel87.workers.dev/", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" }
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
             });
 
             if (resp.ok) {
@@ -339,7 +328,7 @@
                         ✅ <strong>REAL AI Pin Published!</strong><br>
                         Topic generated by Gemini 3.1 Flash Lite<br>
                         Image generated by Cloudflare FLUX.1-schnell<br>
-                        Published live to <strong>Sandbox Board</strong> (@kidslearningtoys11).
+                        Published live to <strong>Production Board</strong> (@kidslearningtoys11).
                     `;
                     document.getElementById('successModal').style.display = "flex";
                 } else {
