@@ -4,7 +4,16 @@ name: Pinterest Automation Bot
 #   schedule:
 #     - cron: '0 12,18 * * *'
 on:
-  workflow_dispatch: # Manual trigger only
+  workflow_dispatch:
+    inputs:
+      product_title:
+        description: 'Amazon product title (e.g. LEGO Classic Bricks Set)'
+        required: false
+        default: ''
+      affiliate_link:
+        description: 'Amazon affiliate link (e.g. https://amzn.to/xxxxx)'
+        required: false
+        default: ''
 
 jobs:
   run-bot:
@@ -45,6 +54,8 @@ jobs:
           BOARD_ID_STEM: ${{ secrets.BOARD_ID_STEM }}
           BOARD_ID_MONTESSORI: ${{ secrets.BOARD_ID_MONTESSORI }}
           BOARD_ID_CRAFTS: ${{ secrets.BOARD_ID_CRAFTS }}
+          PRODUCT_TITLE: ${{ github.event.inputs.product_title }}
+          AFFILIATE_LINK: ${{ github.event.inputs.affiliate_link }}
         run: python main.py
 
       - name: Commit and push updated shared data

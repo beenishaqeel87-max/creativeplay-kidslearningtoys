@@ -23,6 +23,10 @@ APP_SECRET = os.getenv("PINTEREST_APP_SECRET")
 ACCESS_TOKEN = os.getenv("PINTEREST_ACCESS_TOKEN")
 PINTEREST_BASE_URL = "https://api.pinterest.com/v5"
 
+# Amazon Affiliate Inputs
+PRODUCT_TITLE = os.getenv("PRODUCT_TITLE", "").strip()
+AFFILIATE_LINK = os.getenv("AFFILIATE_LINK", "").strip()
+
 # Board mapping (production board IDs)
 DEFAULT_BOARD_ID = os.getenv("BOARD_ID_STEM", "")
 BOARD_MAPPING = {
@@ -43,7 +47,11 @@ def generate_pin_content(data_manager):
     prompt = f"""
     You are an expert Pinterest manager in the 'Kids Learning Toys' niche.
     Create a highly engaging pin about a kids educational toy or activity in the '{category}' category.
+    """
+    if PRODUCT_TITLE:
+        prompt += f"\nCRITICAL INSTRUCTION: The pin MUST be specifically about this exact product: '{PRODUCT_TITLE}'. Highlight its benefits for kids.\n"
 
+    prompt += """
     Requirements:
     - Title: Catchy, click-worthy (max 60 chars).
     - Description: SEO optimized, engaging description for parents, ending with relevant hashtags (max 400 chars).
@@ -311,11 +319,13 @@ def publish_to_pinterest(image_bytes, content):
         "Content-Type": "application/json"
     }
 
+    pin_link = AFFILIATE_LINK if AFFILIATE_LINK else "https://beenishaqeel87-max.github.io/creativeplay-kidslearningtoys/"
+
     pin_payload = {
         "board_id": board_id,
         "title": content['title'],
         "description": content['description'],
-        "link": "https://beenishaqeel87-max.github.io/creativeplay-kidslearningtoys/",
+        "link": pin_link,
         "alt_text": content.get('alt_text', ''),
         "media_source": {
             "source_type": "image_url",
