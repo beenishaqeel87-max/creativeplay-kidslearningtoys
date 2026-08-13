@@ -320,11 +320,8 @@ def publish_to_pinterest(image_bytes, content):
     board_id = SELECTED_BOARD_ID if SELECTED_BOARD_ID else BOARD_MAPPING.get(content['category'], DEFAULT_BOARD_ID)
     print(f"Target board ID: {board_id}")
 
-    # Upload image to get a public URL
-    image_url = upload_image_to_host(image_bytes)
-    if not image_url:
-        print("❌ Failed to upload image to any host.")
-        return False
+    import base64
+    b64_image = base64.b64encode(image_bytes).decode('utf-8')
 
     headers = {
         "Authorization": f"Bearer {ACCESS_TOKEN}",
@@ -340,8 +337,9 @@ def publish_to_pinterest(image_bytes, content):
         "link": pin_link,
         "alt_text": content.get('alt_text', ''),
         "media_source": {
-            "source_type": "image_url",
-            "url": image_url
+            "source_type": "image_base64",
+            "content_type": "image/jpeg",
+            "data": b64_image
         }
     }
 
