@@ -23,9 +23,10 @@ APP_SECRET = os.getenv("PINTEREST_APP_SECRET")
 ACCESS_TOKEN = os.getenv("PINTEREST_ACCESS_TOKEN")
 PINTEREST_BASE_URL = "https://api.pinterest.com/v5"
 
-# Amazon Affiliate Inputs
+# Amazon Affiliate & Manual Board Inputs
 PRODUCT_TITLE = os.getenv("PRODUCT_TITLE", "").strip()
 AFFILIATE_LINK = os.getenv("AFFILIATE_LINK", "").strip()
+SELECTED_BOARD_ID = os.getenv("SELECTED_BOARD_ID", "").strip()
 
 # Board mapping (production board IDs)
 DEFAULT_BOARD_ID = os.getenv("BOARD_ID_STEM", "")
@@ -42,7 +43,18 @@ def generate_pin_content(data_manager):
     client = genai.Client(api_key=GEMINI_API_KEY)
 
     categories = list(BOARD_MAPPING.keys())
+    
+    # If a specific board was requested, we try to map it back to a category name for the prompt
     category = random.choice(categories)
+    if SELECTED_BOARD_ID:
+        for cat_name, b_id in BOARD_MAPPING.items():
+            if b_id == SELECTED_BOARD_ID:
+                category = cat_name
+                break
+        # If it doesn't match the 3 main mapped ones, just use a generic category name
+        if category not in categories:
+            category = "Kids Educational Toys"
+
 
     prompt = f"""
     You are an expert Pinterest manager in the 'Kids Learning Toys' niche.
@@ -305,7 +317,7 @@ def publish_to_pinterest(image_bytes, content):
     """Phase 4: Publish Pin to Pinterest Production API using image URL."""
     print("Publishing Pin to Pinterest Production API...")
 
-    board_id = BOARD_MAPPING.get(content['category'], DEFAULT_BOARD_ID)
+    board_id = SELECTED_BOARD_ID if SELECTED_BOARD_ID else BOARD_MAPPING.get(content['category'], DEFAULT_BOARD_ID)
     print(f"Target board ID: {board_id}")
 
     # Upload image to get a public URL

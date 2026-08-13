@@ -14,6 +14,10 @@ on:
         description: 'Amazon affiliate link (e.g. https://amzn.to/xxxxx)'
         required: false
         default: ''
+      board_id:
+        description: 'Specific Pinterest Board ID to publish to'
+        required: false
+        default: ''
 
 jobs:
   run-bot:
@@ -56,6 +60,7 @@ jobs:
           BOARD_ID_CRAFTS: ${{ secrets.BOARD_ID_CRAFTS }}
           PRODUCT_TITLE: ${{ github.event.inputs.product_title }}
           AFFILIATE_LINK: ${{ github.event.inputs.affiliate_link }}
+          SELECTED_BOARD_ID: ${{ github.event.inputs.board_id }}
         run: python main.py
 
       - name: Commit and push updated shared data

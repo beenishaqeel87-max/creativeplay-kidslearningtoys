@@ -156,6 +156,29 @@
                 <p>Provide a product title and affiliate link. Gemini will create a pin tailored to this product.</p>
 
                 <div class="form-group">
+                    <label>Target Pinterest Board</label>
+                    <select class="form-select" id="boardSelect">
+                        <option value="845691704968000576">Animal & Dinosaur Toys - Screen-Free toys</option>
+                        <option value="845691704968010345">Back to School Screen-Free Learning Toys/Essential</option>
+                        <option value="845691704968000603">Building & Creative Toys for Kids</option>
+                        <option value="845691704968001997">Character Toys (Action Figure & Super Hero)</option>
+                        <option value="845691704968022542">DIY Toys & Fun Play Ideas</option>
+                        <option value="845691704968007447">Educational Musical & Sound Toys for Kids</option>
+                        <option value="845691704968022672">Girls Toys & Play Ideas</option>
+                        <option value="845691704968001111">Learning & Educational Toys for Kids | Screen free</option>
+                        <option value="845691704968001795">Outdoor & Indoor Play | Toys and Gadgets for Kids</option>
+                        <option value="845691704968018607">Paw Patrol Screen Free Fun For Kids</option>
+                        <option value="845691704968005641">Perfect Ideas for gifting Kids Toys !</option>
+                        <option value="845691704967279250">Quick Saves</option>
+                        <option value="845691704968020775">Sandbox</option>
+                        <option value="845691704968001652">Screen-Free Parenting Tips</option>
+                        <option value="845691704968015963">Speech Therapy Toys for Kids</option>
+                        <option value="845691704968013662">Stuffed & Plush Toys for Kids - Screen-Free Cuddly</option>
+                        <option value="845691704968000361">Vehicle Toys for Kids - Say No to Screen-Time</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
                     <label>Amazon Product Title</label>
                     <input type="text" class="form-input" id="affiliateTitle" placeholder="e.g. LEGO Classic Medium Creative Brick Box">
                 </div>
@@ -274,7 +297,8 @@
             // Call Cloudflare Worker proxy (PAT stored securely server-side)
             const payload = {
                 product_title: affiliateTitle.value.trim(),
-                affiliate_link: affiliateLink.value.trim()
+                affiliate_link: affiliateLink.value.trim(),
+                board_id: document.getElementById('boardSelect').value
             };
 
             const resp = await fetch("https://pinterest-trigger.beenish-aqeel87.workers.dev/", {
