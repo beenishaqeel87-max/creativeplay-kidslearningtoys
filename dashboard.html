@@ -227,8 +227,8 @@
     <div class="modal">
         <div class="modal-icon">✅</div>
         <h3>Pin Published to Pinterest!</h3>
-        <p id="successMessage">HTTP 201 Created via Pinterest REST API v5.<br>Published live to <strong>Sandbox Board</strong>.</p>
-        <a href="https://www.pinterest.com/kidslearningtoys11/sandbox/" target="_blank" class="btn-primary" style="text-decoration:none;">📌 Open Sandbox Board on Pinterest</a>
+        <p id="successMessage">HTTP 201 Created via Pinterest REST API v5.<br>Published live to your selected board.</p>
+        <a href="https://www.pinterest.com/kidslearningtoys11/created/" target="_blank" class="btn-primary" style="text-decoration:none;">📌 View Latest Pins on Pinterest</a>
         <button class="btn-secondary" style="margin-top:10px; width:100%;" onclick="closeSuccessModal()">Close Window</button>
     </div>
 </div>
@@ -331,7 +331,7 @@
             { msg: "🤖 Gemini 3.1 Generating Pin Topic & Title...", duration: 8 },
             { msg: "🎨 Cloudflare FLUX.1 Generating AI Image...", duration: 12 },
             { msg: "🖼️ Pillow Applying Text Overlay & Gradient...", duration: 4 },
-            { msg: "📌 Publishing to Pinterest Sandbox API...", duration: 4 },
+            { msg: "📌 Publishing to Pinterest Production API...", duration: 4 },
         ];
 
         let stepIndex = 0;
