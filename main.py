@@ -19,16 +19,12 @@ CF_API_TOKEN = os.getenv("CF_API_TOKEN")
 APP_ID = os.getenv("PINTEREST_APP_ID")
 APP_SECRET = os.getenv("PINTEREST_APP_SECRET")
 
-# Use direct Sandbox Access Token
-ACCESS_TOKEN = os.getenv("PINTEREST_ACCESS_TOKEN") or base64.b64decode(
-    "cGluYV9BTUEzWVJRWUFCRVJLQUFBR0NBTFlDNUpMU1I0TkhZQkFDR1NPNk5MUk9FNUxVVzI2N1dPUTY2MlFRQlo0RjVGUEZPUlYyWlFaSkY0WEdJTkE2RDRUTVRJREJYNVRKQUE="
-).decode()
+# Pinterest API — Standard Access (Production)
+ACCESS_TOKEN = os.getenv("PINTEREST_ACCESS_TOKEN")
+PINTEREST_BASE_URL = "https://api.pinterest.com/v5"
 
-# Sandbox API base URL
-PINTEREST_BASE_URL = "https://api-sandbox.pinterest.com/v5"
-
-# Board mapping
-DEFAULT_BOARD_ID = os.getenv("BOARD_ID_STEM", "845691704968020775")
+# Board mapping (production board IDs)
+DEFAULT_BOARD_ID = os.getenv("BOARD_ID_STEM", "")
 BOARD_MAPPING = {
     "STEM Toys": os.getenv("BOARD_ID_STEM") or DEFAULT_BOARD_ID,
     "Montessori": os.getenv("BOARD_ID_MONTESSORI") or DEFAULT_BOARD_ID,
